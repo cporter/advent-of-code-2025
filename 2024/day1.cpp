@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 
+#include <fmt/core.h>
+
 #include "util/util.hpp"
 
 namespace rv = std::ranges::views;
@@ -29,7 +31,7 @@ int main() {
                  | rv::transform([](const auto &p) { return std::abs(p.first - p.second); })
                  | cp::sum;
 
-    std::cout << "part 1: " << part1 << "\n";
+    fmt::print("part 1: {}\n", part1);
 
     // todo: maybe implement group_by?
     std::map<int, int> histo;
@@ -39,7 +41,7 @@ int main() {
 
     auto part2 = left | rv::transform([&histo](const auto &x) { return x * histo[x]; }) | cp::sum;
 
-    std::cout << "part 2: " << part2 << "\n";
+    fmt::print("part 2: {}\n", part2);
 
     return 0;
 }
