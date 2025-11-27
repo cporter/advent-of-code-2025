@@ -42,3 +42,6 @@
 
 # Bazel stuff
 bazel-*
+
+# AOC input
+input/
