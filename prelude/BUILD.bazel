@@ -10,6 +10,8 @@ cc_test(
     srcs = ["prelude_test.cpp"],
     deps = [
         ":prelude",
+        "@fmt//:fmt",
+        "@spdlog//:spdlog",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

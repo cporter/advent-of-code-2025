@@ -1,7 +1,9 @@
 #include <ranges>
 #include <vector>
 
+#include <fmt/core.h>
 #include <gtest/gtest.h>
+#include <spdlog/spdlog.h>
 
 #include "prelude/prelude.hpp"
 
@@ -20,24 +22,15 @@ TEST(PreludeTest, TestEnumerate) {
 
 TEST(PreludeTest, TestZip) {
     std::vector<int> v0 = {5, 4, 3, 2, 1, 0};
-    std::vector<int> v1 = {1, 2, 3, 4, 5, 0};
+    std::vector<int> v1 = {0, 1, 2, 3, 4, 5};
     auto v2 = std::views::iota(0) | rv::transform([](auto) { return -1; });
 
-    auto z = prelude::zip(v0, v1, v2);
+    auto good = prelude::zip(v0, v1, v2) | rv::transform([](const auto &tup) {
+                    auto &[a, b, c] = tup;
+                    return (a + b) * c;
+                })
+                | rv::transform([](auto x) { return x == -5; })
+                | prelude::reduce(true, std::logical_and<>{});
 
-    static_assert(std::ranges::range<decltype(z)>);
-
-    auto t0 = z | rv::transform([](const auto &tup) {
-                  auto &[a, b, c] = tup;
-                  return (a + b) * c;
-              });
-
-    static_assert(std::ranges::range<decltype(t0)>, "t0 must be a range");
-    // static_assert(std::same_as<std::ranges::range_value_t<decltype(t0)>, int>,
-    //               "t0 must be a range of ints");
-
-    // auto t1 = t0 | rv::transform([](const auto &x) { return x == -5; });
-    // auto good = t1 | prelude::reduce(true, std::logical_and<>{});
-
-    // EXPECT_TRUE(good);
+    EXPECT_TRUE(good) << "hey what the heck?";
 }

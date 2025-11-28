@@ -123,19 +123,17 @@ class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
     std::tuple<std::ranges::views::all_t<Rs>...> bases;
 
     // ---- iterator ----
-    template <bool Const> struct iterator {
-        using Parent = std::conditional_t<Const, const zip_view, zip_view>;
-        Parent *parent;
-        std::tuple<std::ranges::iterator_t<std::conditional_t<Const, const Rs, Rs>>...> iters;
+    struct iterator {
+        zip_view *parent;
+        std::tuple<std::ranges::iterator_t<Rs>...> iters;
 
-        using value_type = std::tuple<
-            std::ranges::range_reference_t<std::conditional_t<Const, const Rs, Rs>>...>;
+        using value_type = std::tuple<std::ranges::range_reference_t<Rs>...>;
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::input_iterator_tag;
 
         iterator() = default;
 
-        iterator(Parent *p, auto &&its) : parent(p), iters(std::forward<decltype(its)>(its)) {}
+        iterator(zip_view *p, auto &&its) : parent(p), iters(std::forward<decltype(its)>(its)) {}
 
         value_type operator*() const {
             return std::apply([](auto &...it) { return value_type(*it...); }, iters);
@@ -157,7 +155,7 @@ class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
     struct sentinel {
         std::tuple<std::ranges::sentinel_t<Rs>...> ends;
 
-        template <bool Const> friend bool operator==(const iterator<Const> &it, const sentinel &s) {
+        friend bool operator==(const iterator &it, const sentinel &s) {
             bool stop = false;
             std::apply(
                 [&](auto &...ends_tuple) {
@@ -168,9 +166,7 @@ class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
             return stop;
         }
 
-        template <bool Const> friend bool operator!=(const iterator<Const> &it, const sentinel &s) {
-            return !(it == s);
-        }
+        friend bool operator!=(const iterator &it, const sentinel &s) { return !(it == s); }
     };
 
   public:
@@ -179,7 +175,7 @@ class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
     explicit zip_view(Rs... rs) : bases(std::views::all(std::move(rs))...) {}
 
     auto begin() & {
-        return iterator<false>(
+        return iterator(
             this,
             std::apply([](auto &...r) { return std::tuple(std::ranges::begin(r)...); }, bases));
     }
@@ -187,17 +183,6 @@ class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
     auto end() & {
         return sentinel{
             std::apply([](auto &...r) { return std::tuple(std::ranges::end(r)...); }, bases)};
-    }
-
-    auto begin() const & {
-        return iterator<true>(
-            this, std::apply([](auto const &...r) { return std::tuple(std::ranges::begin(r)...); },
-                             bases));
-    }
-
-    auto end() const & {
-        return sentinel{
-            std::apply([](auto const &...r) { return std::tuple(std::ranges::end(r)...); }, bases)};
     }
 
     auto begin() && = delete;
