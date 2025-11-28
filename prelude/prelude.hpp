@@ -78,57 +78,6 @@ struct line_view : std::ranges::view_base {
     iterator end() const { return iterator{is, Done::YES}; }
 };
 
-struct enumerate_fn {
-    template <typename Index = size_t, std::ranges::input_range R> auto operator()(R &&r) const {
-        struct view : std::ranges::view_base {
-            std::ranges::views::all_t<R> base;
-
-            view(R &&r) : base(std::forward<R>(r)) {}
-
-            struct iterator {
-                // using iterator_category = std::input_iterator_tag;
-                // using value_type = std::pair<Index, std::ranges::range_value_t<R>>;
-                // using difference_type = std::ranges::range_difference_t<R>;
-                // using reference = std::pair<Index, std::ranges::range_reference_t<R>>;
-
-                using BaseIt = std::ranges::iterator_t<decltype(base)>;
-                BaseIt current;
-                Index index = 0;
-
-                iterator() = default;
-                explicit iterator(BaseIt it) : current(it) {}
-
-                auto operator*() const { return std::pair{index, *current}; }
-
-                iterator &operator++() {
-                    ++current;
-                    ++index;
-                    return *this;
-                }
-                iterator operator++(int) {
-                    iterator ret = *this;
-                    ++*this;
-                    return ret;
-                }
-
-                bool operator==(const iterator &other) const { return current == other.current; }
-            };
-
-            iterator begin() const { return iterator{std::ranges::begin(base)}; }
-            iterator end() const { return iterator{std::ranges::end(base)}; }
-        };
-
-        return view{std::forward<R>(r)};
-    }
-
-    // Support pipe syntax: enumerate | range
-    template <std::ranges::input_range R> friend auto operator|(R &&r, const enumerate_fn &e) {
-        return e(std::forward<R>(r));
-    }
-};
-
-inline constexpr enumerate_fn enumerate;
-
 //
 // collect<C>(range) or range | collect<C>
 //
@@ -264,6 +213,10 @@ struct zip_fn {
 };
 
 inline constexpr zip_fn zip;
+
+template <std::ranges::viewable_range R> auto enumerate(R &&r) {
+    return zip(std::views::iota(std::size_t{0}), std::forward<R>(r));
+}
 
 // pipey reduce
 struct reduce_fn {
