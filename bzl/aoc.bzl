@@ -3,5 +3,5 @@ def aoc(day):
     native.cc_binary(
         name = "day{}".format(day),
         srcs = ["day{}.cpp".format(day)],
-        deps = ["//util:util", "@fmt//:fmt"],
+        deps = ["//prelude:prelude", "@fmt//:fmt"],
     )

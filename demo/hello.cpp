@@ -4,19 +4,20 @@
 
 #include "prelude/prelude.hpp"
 
+namespace rv = std::ranges::views;
+
 int main(int, char **) {
 
-    std::vector<int> v = {1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5, 5};
+    std::vector<int> a = {1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5, 5};
+    std::vector<int> b
+        = a | rv::transform([](int x) { return x * x; }) | prelude::collect<std::vector>;
 
-    // for (auto group : v | prelude::chunk_by(std::equal_to{})) {
-    //     std::cout << "[ ";
-    //     for (int x : group)
-    //         std::cout << x << " ";
-    //     std::cout << "]\n";
-    // }
+    auto zipped = prelude::zip(a, b);
 
-    for (auto rl : v | prelude::run_length) {
-        fmt::print("{} -> {}\n", rl.first, rl.second);
+    static_assert(std::ranges::range<decltype(zipped)>);
+
+    for (auto [a, b] : zipped) {
+        fmt::print("{}, {}\n", a, b);
     }
 
     return 0;

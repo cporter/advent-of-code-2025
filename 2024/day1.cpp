@@ -11,22 +11,23 @@
 
 namespace rv = std::ranges::views;
 
-template <typename R> class drange {
-  private:
-    R _r;
-    std::ranges::iterator_t<R> _begin, _end;
+// template <typename R> class drange {
+//   private:
+//     R _r;
+//     std::ranges::iterator_t<R> _begin, _end;
 
-  public:
-    using T = std::ranges::value_t<R>;
-    drange(R&& r) : _r(std::forward<R>(r)), _begin(std::ranges(begin(_r)), _end(std::ranges::end(_r)) {}
+//   public:
+//     using T = std::ranges::value_t<R>;
+//     drange(R&& r) : _r(std::forward<R>(r)), _begin(std::ranges(begin(_r)),
+//     _end(std::ranges::end(_r)) {}
 
-    T& operator*() const {
-        return *_begin; }
-    bool done() const {
-        return _begin == _end; }
-    void advance() {
-        ++_begin; }
-};
+//     T& operator*() const {
+//         return *_begin; }
+//     bool done() const {
+//         return _begin == _end; }
+//     void advance() {
+//         ++_begin; }
+// };
 
 int main() {
     std::vector<int> left, right;
@@ -36,7 +37,7 @@ int main() {
         int l = 0, r = 0;
         std::stringstream(line) >> l >> r;
         return std::pair<int, int>(l, r);
-    }) | cp::for_each([&left, &right](const auto &p) {
+    }) | prelude::for_each([&left, &right](const auto &p) {
         left.push_back(p.first);
         right.push_back(p.second);
     });
@@ -44,8 +45,10 @@ int main() {
     std::sort(left.begin(), left.end());
     std::sort(right.begin(), right.end());
 
-    auto part1 = prelude::zip2(left, right)
-                 | rv::transform([](const auto &p) { return std::abs(p.first - p.second); })
+    auto part1 = prelude::zip(left, right) | rv::transform([](const auto &tup) {
+                     auto &[a, b] = tup;
+                     return std::abs(a - b);
+                 })
                  | prelude::sum;
 
     fmt::print("part 1: {}\n", part1);

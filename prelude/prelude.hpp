@@ -10,6 +10,7 @@
 #include <numeric>
 #include <ranges>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -158,7 +159,7 @@ template <template <class...> class C> struct collect_fn {
         }
     }
 
-    template <std::ranges::input_range R> friend auto operator|(R &&r, collect_t self) {
+    template <std::ranges::input_range R> friend auto operator|(R &&r, collect_fn self) {
         return self(std::forward<R>(r));
     }
 };
@@ -167,60 +168,102 @@ template <template <class...> class C> inline constexpr collect_fn<C> collect{};
 
 // zip
 
-struct zip2_fn {
-    template <std::ranges::input_range R1, std::ranges::input_range R2>
-    auto operator()(R1 &&r1, R2 &&r2) const {
-        struct view : std::ranges::view_base {
-            std::ranges::views::all_t<R1> _r1;
-            std::ranges::views::all_t<R2> _r2;
+template <std::ranges::viewable_range... Rs>
+class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
+  private:
+    std::tuple<std::ranges::views::all_t<Rs>...> bases;
 
-            view(R1 &&r1, R2 &&r2) : _r1(std::forward<R1>(r1)), _r2(std::forward<R2>(r2)) {}
+    // ---- iterator ----
+    template <bool Const> struct iterator {
+        using Parent = std::conditional_t<Const, const zip_view, zip_view>;
+        Parent *parent;
+        std::tuple<std::ranges::iterator_t<std::conditional_t<Const, const Rs, Rs>>...> iters;
 
-            struct iterator {
-                using R1It = std::ranges::iterator_t<decltype(_r1)>;
-                using R2It = std::ranges::iterator_t<decltype(_r2)>;
+        using value_type = std::tuple<
+            std::ranges::range_reference_t<std::conditional_t<Const, const Rs, Rs>>...>;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::input_iterator_tag;
 
-                R1It _it1;
-                R2It _it2;
+        iterator() = default;
 
-                iterator() = default;
-                iterator(R1It it1, R2It it2) : _it1(it1), _it2(it2) {}
+        iterator(Parent *p, auto &&its) : parent(p), iters(std::forward<decltype(its)>(its)) {}
 
-                using iterator_category = std::input_iterator_tag;
-                using value_type
-                    = std::pair<std::ranges::range_value_t<R1>, std::ranges::range_value_t<R2>>;
-                using difference_type = std::ptrdiff_t;
-                using reference = std::pair<std::ranges::range_reference_t<R1>,
-                                            std::ranges::range_reference_t<R2>>;
+        value_type operator*() const {
+            return std::apply([](auto &...it) { return value_type(*it...); }, iters);
+        }
 
-                reference operator*() const { return {*_it1, *_it2}; }
+        iterator &operator++() {
+            std::apply([](auto &...it) { ((++it), ...); }, iters);
+            return *this;
+        }
 
-                iterator &operator++() {
-                    ++_it1;
-                    ++_it2;
-                    return *this;
-                }
-                iterator operator++(int) {
-                    iterator tmp = *this;
-                    ++*this;
-                    return tmp;
-                }
+        iterator operator++(int) {
+            iterator tmp = *this;
+            ++*this;
+            return tmp;
+        }
+    };
 
-                bool operator==(const iterator &other) const {
-                    return _it1 == other._it1 || _it2 == other._it2;
-                }
-                bool operator!=(const iterator &other) const { return !(*this == other); }
-            };
+    // ---- sentinel ----
+    struct sentinel {
+        std::tuple<std::ranges::sentinel_t<Rs>...> ends;
 
-            iterator begin() { return iterator{std::ranges::begin(_r1), std::ranges::begin(_r2)}; }
-            iterator end() { return iterator{std::ranges::end(_r1), std::ranges::end(_r2)}; }
-        };
+        template <bool Const> friend bool operator==(const iterator<Const> &it, const sentinel &s) {
+            bool stop = false;
+            std::apply(
+                [&](auto &...ends_tuple) {
+                    std::apply([&](auto &...its) { ((stop |= (its == ends_tuple)), ...); },
+                               it.iters);
+                },
+                s.ends);
+            return stop;
+        }
 
-        return view{std::forward<R1>(r1), std::forward<R2>(r2)};
+        template <bool Const> friend bool operator!=(const iterator<Const> &it, const sentinel &s) {
+            return !(it == s);
+        }
+    };
+
+  public:
+    zip_view() = default;
+
+    explicit zip_view(Rs... rs) : bases(std::views::all(std::move(rs))...) {}
+
+    auto begin() & {
+        return iterator<false>(
+            this,
+            std::apply([](auto &...r) { return std::tuple(std::ranges::begin(r)...); }, bases));
+    }
+
+    auto end() & {
+        return sentinel{
+            std::apply([](auto &...r) { return std::tuple(std::ranges::end(r)...); }, bases)};
+    }
+
+    auto begin() const & {
+        return iterator<true>(
+            this, std::apply([](auto const &...r) { return std::tuple(std::ranges::begin(r)...); },
+                             bases));
+    }
+
+    auto end() const & {
+        return sentinel{
+            std::apply([](auto const &...r) { return std::tuple(std::ranges::end(r)...); }, bases)};
+    }
+
+    auto begin() && = delete;
+    auto end() && = delete;
+};
+
+template <typename... Rs> zip_view(Rs &&...) -> zip_view<std::views::all_t<Rs>...>;
+
+struct zip_fn {
+    template <std::ranges::viewable_range... Rs> auto operator()(Rs &&...rs) const {
+        return zip_view(std::forward<Rs>(rs)...);
     }
 };
 
-inline constexpr zip2_fn zip2;
+inline constexpr zip_fn zip;
 
 // pipey reduce
 struct reduce_fn {
@@ -230,7 +273,8 @@ struct reduce_fn {
 
         // no member operator| here
         template <std::ranges::input_range R> friend auto operator|(R &&r, const pipeable &self) {
-            return std::accumulate(r.begin(), r.end(), self.init, self.op);
+            auto common = std::ranges::common_view(r);
+            return std::accumulate(common.begin(), common.end(), self.init, self.op);
         }
     };
 
