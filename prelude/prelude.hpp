@@ -250,21 +250,20 @@ struct sum_fn {
 
 inline constexpr sum_fn sum;
 
-struct peek_fn {
+struct for_each_fn {
     template <typename F> struct pipeable {
         F f;
         template <std::ranges::input_range R>
             requires std::invocable<F &, std::ranges::range_reference_t<R>>
-        friend R &&operator|(R &&r, const pipeable &p) {
+        friend void operator|(R &&r, const pipeable &p) {
             for (auto &&x : r)
                 p.f(x);
-            return std::forward<R>(r); // continue pipeline
         }
     };
 
     template <typename F> constexpr auto operator()(F f) const { return pipeable{f}; }
 };
 
-inline constexpr peek_fn peek;
+inline constexpr for_each_fn for_each;
 
 } // namespace cp

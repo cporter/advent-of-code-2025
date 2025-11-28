@@ -19,7 +19,7 @@ int main() {
         int l = 0, r = 0;
         std::stringstream(line) >> l >> r;
         return std::pair<int, int>(l, r);
-    }) | cp::peek([&left, &right](const auto &p) {
+    }) | cp::for_each([&left, &right](const auto &p) {
         left.push_back(p.first);
         right.push_back(p.second);
     });
