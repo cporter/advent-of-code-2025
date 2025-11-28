@@ -86,10 +86,10 @@ struct enumerate_fn {
             view(R &&r) : base(std::forward<R>(r)) {}
 
             struct iterator {
-                using iterator_category = std::input_iterator_tag;
-                using value_type = std::pair<Index, std::ranges::range_value_t<R>>;
-                using difference_type = std::ranges::range_difference_t<R>;
-                using reference = std::pair<Index, std::ranges::range_reference_t<R>>;
+                // using iterator_category = std::input_iterator_tag;
+                // using value_type = std::pair<Index, std::ranges::range_value_t<R>>;
+                // using difference_type = std::ranges::range_difference_t<R>;
+                // using reference = std::pair<Index, std::ranges::range_reference_t<R>>;
 
                 using BaseIt = std::ranges::iterator_t<decltype(base)>;
                 BaseIt current;

@@ -3,3 +3,14 @@ cc_library(
     hdrs = ["prelude.hpp"],
     visibility = ["//visibility:public"],
 )
+
+cc_test(
+    name = "prelude_test",
+    size = "small",
+    srcs = ["prelude_test.cpp"],
+    deps = [
+        ":prelude",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
