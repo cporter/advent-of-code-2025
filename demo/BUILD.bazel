@@ -1,5 +1,5 @@
 cc_binary(
     name = "hello",
     srcs = ["hello.cpp"],
-    deps = ["//preude:prelude"],
+    deps = ["//preude:prelude", "@fmt//:fmt"],
 )

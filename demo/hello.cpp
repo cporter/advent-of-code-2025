@@ -1,27 +1,23 @@
 #include <iostream>
 
+#include <fmt/core.h>
+
 #include "prelude/prelude.hpp"
 
 int main(int, char **) {
 
-    std::vector<int> a = {1, 2, 3, 4, 5};
-    std::vector<int> b = a | std::ranges::views::transform([](const int &x) { return x + x; })
-                         | cp::collect<std::vector>;
+    std::vector<int> v = {1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5, 5};
 
-    auto z = cp::zip2(a, b);
+    // for (auto group : v | prelude::chunk_by(std::equal_to{})) {
+    //     std::cout << "[ ";
+    //     for (int x : group)
+    //         std::cout << x << " ";
+    //     std::cout << "]\n";
+    // }
 
-    static_assert(std::ranges::range<decltype(z)>);
-
-    auto tx = z | std::ranges::views::transform([](const auto &p) {
-                  const auto &[x, y] = p;
-                  return std::pair(x * 3, y * 3);
-              });
-
-    auto answer = tx
-                  | std::ranges::views::transform([](const auto &p) { return p.first + p.second; })
-                  | cp::sum;
-
-    std::cout << answer << "\n";
+    for (auto rl : v | prelude::run_length) {
+        fmt::print("{} -> {}\n", rl.first, rl.second);
+    }
 
     return 0;
 }
