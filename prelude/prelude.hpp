@@ -19,42 +19,6 @@
 
 namespace cp {
 
-template <typename T> struct my_view : std::ranges::view_base {
-    T *data;
-    std::size_t size;
-
-    my_view(T *d, std::size_t s) : data(d), size(s) {}
-
-    struct iterator {
-        using iterator_category = std::input_iterator_tag;
-        using value_type = T;
-        using difference_type = std::ptrdiff_t;
-        using reference = T &;
-        using pointer = T *;
-
-        T *ptr;
-
-        iterator() = default;
-        explicit iterator(T *p) : ptr(p) {}
-        reference operator*() const { return *ptr; }
-        iterator &operator++() {
-            ++ptr;
-            return *this;
-        }
-        iterator operator++(int) {
-            iterator tmp = *this;
-            ++ptr;
-            return tmp;
-        }
-
-        friend bool operator==(const iterator &a, const iterator &b) { return a.ptr == b.ptr; }
-        friend bool operator!=(const iterator &a, const iterator &b) { return a.ptr != b.ptr; }
-    };
-
-    iterator begin() const { return iterator{data}; }
-    iterator end() const { return iterator{data + size}; }
-};
-
 struct line_view : std::ranges::view_base {
     std::istream *is;
 
@@ -167,7 +131,7 @@ inline constexpr enumerate_fn enumerate;
 //
 // collect<C>(range) or range | collect<C>
 //
-template <template <class...> class C> struct collect_t {
+template <template <class...> class C> struct collect_fn {
     template <std::ranges::input_range R> auto operator()(R &&r) const {
         using T = std::ranges::range_value_t<R>;
 
@@ -199,7 +163,7 @@ template <template <class...> class C> struct collect_t {
     }
 };
 
-template <template <class...> class C> inline constexpr collect_t<C> collect{};
+template <template <class...> class C> inline constexpr collect_fn<C> collect{};
 
 // zip
 
