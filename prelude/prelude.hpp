@@ -81,6 +81,7 @@ struct line_view : std::ranges::view_base {
 //
 // collect<C>(range) or range | collect<C>
 //
+namespace detail {
 template <template <class...> class C> struct collect_fn {
     template <std::ranges::input_range R> auto operator()(R &&r) const {
         using T = std::ranges::range_value_t<R>;
@@ -112,11 +113,27 @@ template <template <class...> class C> struct collect_fn {
         return self(std::forward<R>(r));
     }
 };
+} // namespace detail
+template <template <class...> class C> inline constexpr detail::collect_fn<C> collect{};
 
-template <template <class...> class C> inline constexpr collect_fn<C> collect{};
+// collect optional types iff they are all there. If anything isn't,
+// nullopt the whole thing.
+template <std::ranges::input_range R> auto collect_optional(R &&r) {
+    using Opt = std::ranges::range_value_t<R>;
+    using T = typename Opt::value_type;
+    using Result = std::optional<std::vector<T>>;
+
+    std::vector<T> result;
+    for (const auto &opt : r) {
+        if (!opt)
+            return Result{std::nullopt};
+        result.push_back(*opt);
+    }
+    return Result(std::move(result));
+}
 
 // zip
-
+namespace detail {
 template <std::ranges::viewable_range... Rs>
 class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
   private:
@@ -196,14 +213,16 @@ struct zip_fn {
         return zip_view(std::forward<Rs>(rs)...);
     }
 };
+} // namespace detail
 
-inline constexpr zip_fn zip;
+inline constexpr detail::zip_fn zip;
 
 template <std::ranges::viewable_range R> auto enumerate(R &&r) {
     return zip(std::views::iota(std::size_t{0}), std::forward<R>(r));
 }
 
 // pipey reduce
+namespace detail {
 struct reduce_fn {
     template <typename T, typename BinaryOp> struct pipeable {
         T init;
@@ -220,18 +239,22 @@ struct reduce_fn {
         return pipeable<T, BinaryOp>{init, op};
     }
 };
+} // namespace detail
 
-inline constexpr reduce_fn reduce;
+inline constexpr detail::reduce_fn reduce;
 
+namespace detail {
 struct sum_fn {
     template <std::ranges::input_range R> friend auto operator|(R &&r, sum_fn) {
         using T = std::ranges::range_value_t<std::decay_t<decltype(r)>>;
         return r | reduce(T{0}, std::plus<>{});
     }
 };
+} // namespace detail
 
-inline constexpr sum_fn sum;
+inline constexpr detail::sum_fn sum;
 
+namespace detail {
 struct for_each_fn {
     template <typename F> struct pipeable {
         F f;
@@ -245,9 +268,11 @@ struct for_each_fn {
 
     template <typename F> constexpr auto operator()(F f) const { return pipeable{f}; }
 };
+} // namespace detail
 
-inline constexpr for_each_fn for_each;
+inline constexpr detail::for_each_fn for_each;
 
+namespace detail {
 template <std::ranges::view R, class Pred>
     requires std::regular_invocable<Pred &, std::ranges::range_reference_t<R>,
                                     std::ranges::range_reference_t<R>>
@@ -331,9 +356,9 @@ struct chunk_by_fn {
 
     template <class P> auto operator()(P pred) const { return std::pair{chunk_by_fn{}, pred}; }
 };
-
-inline constexpr chunk_by_fn chunk_by;
-
+} // namespace detail
+inline constexpr detail::chunk_by_fn chunk_by;
+namespace detail {
 struct run_length_fn {
     template <std::ranges::viewable_range R> auto operator()(R &&r) const {
         return std::forward<R>(r) | chunk_by(std::equal_to{}) // group equal consecutive elements
@@ -349,7 +374,7 @@ struct run_length_fn {
         return self(std::forward<R>(r));
     }
 };
-
-inline constexpr run_length_fn run_length;
+} // namespace detail
+inline constexpr detail::run_length_fn run_length;
 
 } // namespace prelude
