@@ -25,6 +25,33 @@ bool doubleseq(long n) {
     return first_half == second_half;
 }
 
+bool repeatedDigits(long n, int digits) {
+    const long divisor = static_cast<long>(std::pow(10, digits));
+    const long orig = n % divisor;
+    if (orig < 1) {
+        return false;
+    }
+    long accum = orig;
+    while (accum < n) {
+        accum = accum * divisor + orig;
+    }
+    return accum == n;
+}
+
+bool repeatedDigits(long n) {
+    int digits = static_cast<int>(std::floor(std::log10(n))) + 1;
+    const int half = digits / 2;
+
+    for (int k = 1; k <= half; ++k) {
+        if (digits % k == 0) {
+            if (repeatedDigits(n, k)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 struct num_pair {
     long a, b;
 };
@@ -47,15 +74,20 @@ int main(int, char **) {
                   });
 
     long part1 = 0;
+    long part2 = 0;
     for (auto &&p : inputs) {
         for (long i = p.a; i <= p.b; ++i) {
             if (doubleseq(i)) {
                 part1 += i;
             }
+            if (repeatedDigits(i)) {
+                part2 += i;
+            }
         }
     }
 
     fmt::print("part 1: {}\n", part1);
+    fmt::print("part 2: {}\n", part2);
 
     return 0;
 }
