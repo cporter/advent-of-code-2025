@@ -1,3 +1,4 @@
 load("//bzl:aoc.bzl", "aoc")
 
 aoc(1)
+aoc(2)
