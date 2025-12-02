@@ -13,22 +13,16 @@ constexpr int LOCK_SIZE = 100;
 
 int lock_mod(int x) { return (x % LOCK_SIZE + LOCK_SIZE) % LOCK_SIZE; }
 
-std::optional<int> turn_from_string(const std::string &s) {
-    int x = 0;
-    try {
-        x = std::stoi(s.substr(1));
-    } catch (const std::invalid_argument &e) {
-        spdlog::error("Non-number: {} ({})", s.substr(1), e.what());
-        return std::nullopt;
-    }
+int turn_from_string(const std::string &s) {
+    int x = std::stoi(s.substr(1));
+
     switch (s[0]) {
     case 'R':
         return x;
     case 'L':
         return -x;
     default:
-        spdlog::error("Unrecognizable prefix: {}", s[0]);
-        return std::nullopt;
+        throw std::invalid_argument(fmt::format("unrecognized prefix: {}", s[0]));
     };
 }
 
@@ -38,19 +32,12 @@ std::optional<int> turn_from_string(const std::string &s) {
 int full_turns(int x) { return std::abs(x / 100); }
 
 int main(int, char **) {
-    auto collectedOpt
-        = prelude::collect_optional(prelude::line_view(std::cin) | rv::transform(turn_from_string));
-    if (!collectedOpt) {
-        spdlog::error("Malformed input");
-        return -1;
-    }
-
-    auto turns = std::move(*collectedOpt);
+    auto turns = prelude::line_view(std::cin) | rv::transform(turn_from_string);
 
     int position = 50;
     int part1 = 0;
     int part2 = 0;
-    for (auto &x : turns) {
+    for (auto x : turns) {
         part2 += full_turns(x);
         x %= LOCK_SIZE;
         if (position != 0 && (position + x > LOCK_SIZE || position + x < 0)) {
