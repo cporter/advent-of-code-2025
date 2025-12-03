@@ -2,6 +2,10 @@ cc_library(
     name = "prelude",
     hdrs = ["prelude.hpp"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@fmt//:fmt",
+        "@spdlog//:spdlog",
+    ]
 )
 
 cc_test(
@@ -10,8 +14,6 @@ cc_test(
     srcs = ["prelude_test.cpp"],
     deps = [
         ":prelude",
-        "@fmt//:fmt",
-        "@spdlog//:spdlog",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

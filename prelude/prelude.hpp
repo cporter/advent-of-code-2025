@@ -15,6 +15,9 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
+
 // Rangy utilities that make C++ feel more at home.
 // I think a lot of these things are in c++23? I should just get a new compiler.
 
@@ -230,8 +233,12 @@ struct reduce_fn {
 
         // no member operator| here
         template <std::ranges::input_range R> friend auto operator|(R &&r, const pipeable &self) {
-            auto common = std::ranges::common_view(r);
-            return std::accumulate(common.begin(), common.end(), self.init, self.op);
+            if constexpr (std::ranges::common_range<R>) {
+                return std::accumulate(r.begin(), r.end(), self.init, self.op);
+            } else {
+                auto common = std::ranges::common_view(r);
+                return std::accumulate(common.begin(), common.end(), self.init, self.op);
+            }
         }
     };
 
