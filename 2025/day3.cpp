@@ -2,15 +2,6 @@
 
 namespace rv = std::ranges::views;
 
-int part1_joltage(const std::vector<int> &nums) {
-    auto it = std::ranges::begin(nums);
-    auto end = std::ranges::end(nums);
-    auto stop = std::ranges::prev(end);
-    auto biggest = std::ranges::max_element(it, stop);
-    int second = *std::ranges::max_element(std::next(biggest), end);
-    return 10 * *biggest + second;
-}
-
 long par2_largest_subsequence(const std::vector<int> &v, int k) {
     int n = v.size();
     int to_remove = n - k;
@@ -38,7 +29,9 @@ int main(int, char **) {
                            | prelude::collect<std::vector>;
                 })
                 | prelude::collect<std::vector>;
-    int part1 = data | rv::transform(part1_joltage) | prelude::sum;
+
+    long part1 = data | rv::transform([](const auto &v) { return par2_largest_subsequence(v, 2); })
+                 | prelude::sum;
     long part2 = data | rv::transform([](const auto &v) { return par2_largest_subsequence(v, 12); })
                  | prelude::sum;
 
