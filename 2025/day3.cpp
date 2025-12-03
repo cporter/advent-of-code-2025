@@ -2,7 +2,7 @@
 
 namespace rv = std::ranges::views;
 
-long par2_largest_subsequence(const std::vector<int> &v, int k) {
+long largest_subsequence(const std::vector<int> &v, int k) {
     int n = v.size();
     int to_remove = n - k;
 
@@ -19,7 +19,6 @@ long par2_largest_subsequence(const std::vector<int> &v, int k) {
 
     result.resize(k);
 
-    // Convert to long
     return result | prelude::reduce(0l, [](long a, int b) { return 10 * a + b; });
 }
 
@@ -30,9 +29,9 @@ int main(int, char **) {
                 })
                 | prelude::collect<std::vector>;
 
-    long part1 = data | rv::transform([](const auto &v) { return par2_largest_subsequence(v, 2); })
+    long part1 = data | rv::transform([](const auto &v) { return largest_subsequence(v, 2); })
                  | prelude::sum;
-    long part2 = data | rv::transform([](const auto &v) { return par2_largest_subsequence(v, 12); })
+    long part2 = data | rv::transform([](const auto &v) { return largest_subsequence(v, 12); })
                  | prelude::sum;
 
     fmt::print("Part 1: {}\n", part1);
