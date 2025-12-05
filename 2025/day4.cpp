@@ -98,9 +98,13 @@ auto removable(const G &grid) {
     return grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })
            | rv::transform(
                [grid](const auto &p) { return std::make_pair(p, fullNeighbors(grid, p)); })
-           | rv::filter([](auto &&pp) {
-                 auto [p, count] = pp;
+           | rv::filter([](const auto &pp) {
+                 const auto &[p, count] = pp;
                  return count <= 4;
+             })
+           | rv::transform([](const auto &pp) {
+                 auto [p, count] = pp;
+                 return p;
              });
 }
 
@@ -112,15 +116,23 @@ int main(int, char **) {
                          | prelude::collect<std::vector>);
 
     int part1 = 0;
-    for (const auto &elt :
-         grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })) {
-        int neighbors = fullNeighbors(grid, elt);
-        if (neighbors <= 4) {
-            part1++;
+    int part2 = 0;
+    while (true) {
+        auto r = removable(grid) | prelude::collect<std::vector>;
+        if (r.size() == 0) {
+            break;
+        }
+        if (part1 == 0) {
+            part1 = r.size();
+        }
+        part2 += r.size();
+        for (auto &p : r) {
+            grid.set(p.row, p.col, GridState::EMPTY);
         }
     }
 
     fmt::print("part 1: {}\n", part1);
+    fmt::print("part 2: {}\n", part2);
 
     return 0;
 }
