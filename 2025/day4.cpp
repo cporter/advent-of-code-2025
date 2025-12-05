@@ -86,19 +86,23 @@ static GridState fromChar(const char ch) {
     }
 }
 
-// auto removable(const Grid<GridState> &grid) {
-//     return grid.elts() \
-//     | rv::filter([](const auto &elt) {
-//     return elt.ref == GridState::ROLL; })
-//            | rv::transform([grid](const auto &elt) {
-//     int neighbors = grid.neighbors(elt.row, elt.col)
-//                     | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0;
-//                     }) | prelude::sum;
+using G = Grid<GridState>;
 
-//             }
+int fullNeighbors(const G &grid, const G::Point &p) {
+    return grid.neighbors(p.row, p.col)
+           | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0; })
+           | prelude::sum;
+}
 
-//              })
-// }
+auto removable(const G &grid) {
+    return grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })
+           | rv::transform(
+               [grid](const auto &p) { return std::make_pair(p, fullNeighbors(grid, p)); })
+           | rv::filter([](auto &&pp) {
+                 auto [p, count] = pp;
+                 return count <= 4;
+             });
+}
 
 int main(int, char **) {
     fmt::print("hello world\n");
@@ -110,10 +114,7 @@ int main(int, char **) {
     int part1 = 0;
     for (const auto &elt :
          grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })) {
-        int neighbors
-            = grid.neighbors(elt.row, elt.col)
-              | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0; })
-              | prelude::sum;
+        int neighbors = fullNeighbors(grid, elt);
         if (neighbors <= 4) {
             part1++;
         }
