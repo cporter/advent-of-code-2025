@@ -220,10 +220,19 @@ struct zip_fn {
 
 inline constexpr detail::zip_fn zip;
 
-template <std::ranges::viewable_range R> auto enumerate(R &&r) {
-    return zip(std::views::iota(std::size_t{0}), std::forward<R>(r));
-}
+namespace detail {
+struct enumerate_fn {
+    template <std::ranges::viewable_range R> auto operator()(R &&r) const {
+        return zip(std::ranges::views::iota(int(0)), std::forward<R>(r));
+    }
 
+    template <std::ranges::viewable_range R>
+    friend auto operator|(R &&r, const enumerate_fn &self) {
+        return self(std::forward<R>(r));
+    }
+};
+} // namespace detail
+inline constexpr detail::enumerate_fn enumerate{};
 // pipey reduce
 namespace detail {
 struct reduce_fn {

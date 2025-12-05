@@ -9,17 +9,6 @@
 
 namespace rv = std::ranges::views;
 
-TEST(PreludeTest, TestEnumerate) {
-    std::vector<int> v = {5, 4, 3, 2, 1, 0};
-    int count = 0;
-    for (auto [a, b] : prelude::enumerate(v)) {
-        ++count;
-        std::cerr << a << " + " << b << " = " << a + b << "\n";
-        EXPECT_EQ(5, a + b) << "a + b =/= 5: " << a << ", " << b;
-    }
-    EXPECT_EQ(count, v.size());
-}
-
 TEST(PreludeTest, TestZip) {
     std::vector<int> v0 = {5, 4, 3, 2, 1, 0};
     std::vector<int> v1 = {0, 1, 2, 3, 4, 5};
@@ -33,4 +22,18 @@ TEST(PreludeTest, TestZip) {
                 | prelude::reduce(true, std::logical_and<>{});
 
     EXPECT_TRUE(good) << "hey what the heck?";
+}
+
+TEST(PreludeTest, TestEnumerate) {
+    std::vector<int> all5 = {5, 5, 5, 5, 5};
+    int total = 0;
+    for (auto [a, b] : prelude::enumerate(all5)) {
+        total += a * b;
+    }
+
+    total = 0;
+    for (auto [a, b] : all5 | prelude::enumerate) {
+        total += a * b;
+    }
+    EXPECT_EQ(total, 5 + 10 + 15 + 20);
 }

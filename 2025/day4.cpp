@@ -1,0 +1,109 @@
+#include "prelude/prelude.hpp"
+
+namespace rv = std::ranges::views;
+
+enum GridState { EMPTY = 0, ROLL = 1 };
+
+template <> struct fmt::formatter<GridState> : fmt::formatter<std::string_view> {
+    auto format(const GridState &p, fmt::format_context &ctx) const {
+        std::string s = GridState::ROLL == p ? "@" : ".";
+        return fmt::formatter<std::string_view>::format(s, ctx);
+    }
+};
+
+template <typename T> class Grid {
+  private:
+    std::vector<std::vector<T>> _elts;
+    int _rows, _cols;
+
+  public:
+    Grid(const std::vector<std::vector<T>> &elts)
+        : _elts(std::move(elts)), _rows(_elts.size()), _cols(elts[0].size()) {}
+
+    int rows() const { return _rows; }
+    int cols() const { return _cols; }
+
+    struct Coord {
+        int row, col;
+    };
+    struct Point {
+        Coord coord;
+        T ref;
+    };
+
+    auto elts() const noexcept {
+        return _elts | prelude::enumerate | rv::transform([](auto &&rowpair) {
+                   const auto [r, row] = rowpair;
+                   return row | prelude::enumerate | rv::transform([r](auto &&colpair) {
+                              const auto [c, elt] = colpair;
+                              Coord coord{r, c};
+                              Point point{coord, elt};
+                              return point;
+                          });
+               })
+               | rv::join;
+    }
+
+    const T &at(int r, int c) const { return _elts.at(r).at(c); }
+
+    static constexpr std::array<Coord, 9> deltas{Coord{-1, -1}, Coord{-1, 0}, Coord{-1, 1},
+                                                 Coord{0, -1},  Coord{0, 0},  Coord{0, 1},
+                                                 Coord{1, -1},  Coord{1, 0},  Coord{1, 1}};
+
+    auto neighbors(int r, int c) const {
+        return deltas | rv::transform([r, c](const Coord &coord) {
+                   return Coord{r + coord.row, c + coord.col};
+               })
+               | rv::filter([this](const Coord cc) {
+                     return cc.row >= 0 && cc.row < _rows && cc.col >= 0 && cc.col < _cols;
+                 })
+               | rv::transform([this](const Coord &c) { return Point{c, _elts[c.row][c.col]}; });
+    }
+};
+
+template <typename T> struct fmt::formatter<Grid<T>> : fmt::formatter<std::string_view> {
+    auto format(const Grid<T> &g, fmt::format_context &ctx) const {
+        std::string s;
+        s.reserve((1 + g.rows()) + g.cols());
+        for (int r = 0; r < g.rows(); ++r) {
+            for (int c = 0; c < g.cols(); ++c) {
+                s.append(fmt::format("{}", g.at(r, c)));
+            }
+            s.push_back('\n');
+        }
+        return fmt::formatter<std::string_view>::format(s, ctx);
+    }
+};
+
+int main(int, char **) {
+    fmt::print("hello world\n");
+    Grid<GridState> grid(prelude::line_view(std::cin) | rv::transform([](const auto &line) {
+                             return line | rv::transform([](const char ch) {
+                                        switch (ch) {
+                                        case '@':
+                                            return GridState::ROLL;
+                                        default:
+                                            return GridState::EMPTY;
+                                        }
+                                    })
+                                    | prelude::collect<std::vector>;
+                         })
+                         | prelude::collect<std::vector>);
+
+    int part1 = 0;
+    for (const auto &elt :
+         grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })) {
+        int neighbors
+            = grid.neighbors(elt.coord.row, elt.coord.col)
+              | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0; })
+              | prelude::sum;
+        // fmt::print("{}, {} = {} ({})\n", elt.coord.row, elt.coord.col, neighbors, part1);
+        if (neighbors <= 4) {
+            part1++;
+        }
+    }
+
+    fmt::print("part 1: {}\n", part1);
+
+    return 0;
+}
