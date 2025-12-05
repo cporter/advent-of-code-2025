@@ -52,17 +52,6 @@ bool repeatedDigits(long n) {
     return false;
 }
 
-struct num_pair {
-    long a, b;
-};
-
-template <> struct fmt::formatter<num_pair> : fmt::formatter<std::string_view> {
-    auto format(const num_pair &p, fmt::format_context &ctx) const {
-        std::string s = fmt::format("{}<->{}", p.a, p.b);
-        return fmt::formatter<std::string_view>::format(s, ctx);
-    }
-};
-
 int main(int, char **) {
     std::string line;
     std::getline(std::cin, line);
@@ -70,13 +59,13 @@ int main(int, char **) {
                       auto dash = std::ranges::find(r, '-');
                       auto a = std::string(std::ranges::begin(r), dash);
                       auto b = std::string(std::ranges::next(dash), std::ranges::end(r));
-                      return num_pair{std::stol(a), std::stol(b)};
+                      return std::make_pair(std::stol(a), std::stol(b));
                   });
 
     long part1 = 0;
     long part2 = 0;
     for (auto &&p : inputs) {
-        for (long i = p.a; i <= p.b; ++i) {
+        for (long i = p.first; i <= p.second; ++i) {
             if (doubleseq(i)) {
                 part1 += i;
             }

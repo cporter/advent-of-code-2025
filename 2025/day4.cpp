@@ -47,9 +47,8 @@ template <typename T> class Grid {
 
     const T &at(int r, int c) const { return _elts.at(r).at(c); }
 
-    static constexpr std::array<Coord, 9> deltas{Coord{-1, -1}, Coord{-1, 0}, Coord{-1, 1},
-                                                 Coord{0, -1},  Coord{0, 0},  Coord{0, 1},
-                                                 Coord{1, -1},  Coord{1, 0},  Coord{1, 1}};
+    static constexpr std::array<Coord, 9> deltas{
+        {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}};
 
     auto neighbors(int r, int c) const {
         return deltas | rv::transform([r, c](const Coord &coord) {
