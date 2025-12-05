@@ -23,11 +23,13 @@ template <typename T> class Grid {
     int rows() const { return _rows; }
     int cols() const { return _cols; }
 
+    void set(const int r, const int c, const T &t) { _elts[r][c] = t; }
+
     struct Coord {
         int row, col;
     };
     struct Point {
-        Coord coord;
+        int row, col;
         T ref;
     };
 
@@ -36,8 +38,7 @@ template <typename T> class Grid {
                    const auto [r, row] = rowpair;
                    return row | prelude::enumerate | rv::transform([r](auto &&colpair) {
                               const auto [c, elt] = colpair;
-                              Coord coord{r, c};
-                              Point point{coord, elt};
+                              Point point{r, c, elt};
                               return point;
                           });
                })
@@ -57,7 +58,8 @@ template <typename T> class Grid {
                | rv::filter([this](const Coord cc) {
                      return cc.row >= 0 && cc.row < _rows && cc.col >= 0 && cc.col < _cols;
                  })
-               | rv::transform([this](const Coord &c) { return Point{c, _elts[c.row][c.col]}; });
+               | rv::transform(
+                   [this](const Coord &c) { return Point{c.row, c.col, _elts[c.row][c.col]}; });
     }
 };
 
@@ -75,18 +77,33 @@ template <typename T> struct fmt::formatter<Grid<T>> : fmt::formatter<std::strin
     }
 };
 
+static GridState fromChar(const char ch) {
+    switch (ch) {
+    case '@':
+        return GridState::ROLL;
+    default:
+        return GridState::EMPTY;
+    }
+}
+
+// auto removable(const Grid<GridState> &grid) {
+//     return grid.elts() \
+//     | rv::filter([](const auto &elt) {
+//     return elt.ref == GridState::ROLL; })
+//            | rv::transform([grid](const auto &elt) {
+//     int neighbors = grid.neighbors(elt.row, elt.col)
+//                     | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0;
+//                     }) | prelude::sum;
+
+//             }
+
+//              })
+// }
+
 int main(int, char **) {
     fmt::print("hello world\n");
     Grid<GridState> grid(prelude::line_view(std::cin) | rv::transform([](const auto &line) {
-                             return line | rv::transform([](const char ch) {
-                                        switch (ch) {
-                                        case '@':
-                                            return GridState::ROLL;
-                                        default:
-                                            return GridState::EMPTY;
-                                        }
-                                    })
-                                    | prelude::collect<std::vector>;
+                             return line | rv::transform(fromChar) | prelude::collect<std::vector>;
                          })
                          | prelude::collect<std::vector>);
 
@@ -94,10 +111,9 @@ int main(int, char **) {
     for (const auto &elt :
          grid.elts() | rv::filter([](const auto &elt) { return elt.ref == GridState::ROLL; })) {
         int neighbors
-            = grid.neighbors(elt.coord.row, elt.coord.col)
+            = grid.neighbors(elt.row, elt.col)
               | rv::transform([](const auto &p) { return p.ref == GridState::ROLL ? 1 : 0; })
               | prelude::sum;
-        // fmt::print("{}, {} = {} ({})\n", elt.coord.row, elt.coord.col, neighbors, part1);
         if (neighbors <= 4) {
             part1++;
         }
