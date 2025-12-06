@@ -435,4 +435,19 @@ std::vector<std::string> split_ws(std::string_view sv) {
     return out;
 }
 
+template <typename Collection> Collection transpose(Collection &orig) {
+    Collection reformed;
+    const size_t R = orig.size();
+    const size_t C = orig[0].size();
+
+    for (size_t i = 0; i < C; ++i) {
+        std::string r;
+        for (size_t j = 0; j < R; ++j) {
+            r.push_back(orig[j][i]);
+        }
+        reformed.push_back(prelude::chomp(r));
+    }
+    return reformed;
+}
+
 } // namespace prelude

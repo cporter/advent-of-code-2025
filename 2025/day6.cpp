@@ -24,7 +24,7 @@ template <typename R> long compute(Operand o, R &&r) {
     }
 }
 
-void part1(const std::vector<std::string> &raw_input) {
+long part1(const std::vector<std::string> &raw_input) {
     std::vector<std::vector<std::string>> orig_input = raw_input | rv::transform(prelude::chomp)
                                                        | rv::transform(prelude::split_ws)
                                                        | prelude::collect<std::vector>;
@@ -47,30 +47,20 @@ void part1(const std::vector<std::string> &raw_input) {
                  })
                  | prelude::sum;
 
-    fmt::print("part 1: {}\n", part1);
+    return part1;
 }
 
-void part2(std::vector<std::string> &orig) {
+long part2(std::vector<std::string> &orig) {
     auto operands = prelude::split_ws(prelude::chomp(orig.back()))
                     | rv::transform(operandFromString) | prelude::collect<std::vector>;
     orig.pop_back();
 
-    std::vector<std::string> reformed;
-    const size_t R = orig.size();
-    const size_t C = orig[0].size();
-
-    for (size_t i = 0; i < C; ++i) {
-        std::string r;
-        for (size_t j = 0; j < R; ++j) {
-            r.push_back(orig[j][i]);
-        }
-        reformed.push_back(prelude::chomp(r));
-    }
+    auto reformed = prelude::transpose(orig) | rv::transform(prelude::chomp);
 
     long part2 = 0;
     std::vector<long> accum;
     size_t op = 0;
-    for (auto &s : reformed) {
+    for (auto &&s : reformed) {
         if (0 == s.size()) {
             part2 += compute(operands[op++], accum);
             accum.clear();
@@ -80,14 +70,14 @@ void part2(std::vector<std::string> &orig) {
     }
     part2 += compute(operands[op++], accum);
 
-    fmt::print("part 2: {}\n", part2);
+    return part2;
 }
 
 int main(int, char **) {
     std::vector<std::string> raw_input
         = prelude::line_view(std::cin) | prelude::collect<std::vector>;
 
-    part1(raw_input);
-    part2(raw_input);
+    fmt::print("part 1: {}\n", part1(raw_input));
+    fmt::print("part 2: {}\n", part2(raw_input));
     return 0;
 }
