@@ -13,6 +13,17 @@ Operand operandFromString(const std::string &s) {
     }
 }
 
+template <typename R> long compute(Operand o, R &&r) {
+    switch (o) {
+    case Operand::SUM:
+        return r | prelude::sum;
+    case Operand::PRODUCT:
+        return r | prelude::product;
+    default:
+        return 0;
+    }
+}
+
 void part1(const std::vector<std::string> &raw_input) {
     std::vector<std::vector<std::string>> orig_input = raw_input | rv::transform(prelude::chomp)
                                                        | rv::transform(prelude::split_ws)
@@ -30,19 +41,11 @@ void part1(const std::vector<std::string> &raw_input) {
         }
     }
 
-    long part1 = 0;
-    for (size_t i = 0; i < nums.size(); ++i) {
-        switch (operands[i]) {
-        case Operand::SUM:
-            part1 += nums[i] | prelude::sum;
-            break;
-        case Operand::PRODUCT:
-            part1 += nums[i] | prelude::product;
-            break;
-        default:
-            break;
-        }
-    }
+    long part1 = prelude::zip(operands, nums) | rv::transform([](const auto &p) {
+                     auto &[op, num] = p;
+                     return compute(op, num);
+                 })
+                 | prelude::sum;
 
     fmt::print("part 1: {}\n", part1);
 }
@@ -69,33 +72,13 @@ void part2(std::vector<std::string> &orig) {
     size_t op = 0;
     for (auto &s : reformed) {
         if (0 == s.size()) {
-            switch (operands[op++]) {
-            case Operand::SUM:
-                part2 += accum | prelude::sum;
-                break;
-            case Operand::PRODUCT:
-                part2 += accum | prelude::product;
-                break;
-            default:
-                spdlog::error("Wat?");
-                break;
-            }
+            part2 += compute(operands[op++], accum);
             accum.clear();
         } else {
             accum.push_back(std::stol(s));
         }
     }
-    switch (operands[op++]) {
-    case Operand::SUM:
-        part2 += accum | prelude::sum;
-        break;
-    case Operand::PRODUCT:
-        part2 += accum | prelude::product;
-        break;
-    default:
-        spdlog::error("Wat?");
-        break;
-    }
+    part2 += compute(operands[op++], accum);
 
     fmt::print("part 2: {}\n", part2);
 }
