@@ -266,9 +266,18 @@ struct sum_fn {
         return r | reduce(T{0}, std::plus<>{});
     }
 };
+
+struct product_fn {
+    template <std::ranges::input_range R> friend auto operator|(R &&r, product_fn) {
+        using T = std::ranges::range_value_t<std::decay_t<decltype(r)>>;
+        return r | reduce(T{1}, std::multiplies<>{});
+    }
+};
+
 } // namespace detail
 
 inline constexpr detail::sum_fn sum;
+inline constexpr detail::product_fn product;
 
 namespace detail {
 struct for_each_fn {
@@ -392,5 +401,38 @@ struct run_length_fn {
 };
 } // namespace detail
 inline constexpr detail::run_length_fn run_length;
+
+// string stuff
+
+std::string chomp(std::string s) {
+    auto is_space = [](char c) { return std::isspace((unsigned char)c); };
+
+    auto first = std::ranges::find_if_not(s, is_space);
+    auto last = std::ranges::find_if_not(s | std::views::reverse, is_space).base();
+
+    return (first < last) ? std::string(first, last) : std::string{};
+}
+
+std::vector<std::string> split_ws(std::string_view sv) {
+    std::vector<std::string> out;
+    size_t i = 0, n = sv.size();
+
+    while (i < n) {
+        // skip whitespace
+        while (i < n && std::isspace((unsigned char)sv[i]))
+            ++i;
+
+        size_t start = i;
+
+        // consume non-whitespace
+        while (i < n && !std::isspace((unsigned char)sv[i]))
+            ++i;
+
+        if (start < i)
+            out.emplace_back(sv.substr(start, i - start));
+    }
+
+    return out;
+}
 
 } // namespace prelude
