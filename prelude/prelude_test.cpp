@@ -37,3 +37,7 @@ TEST(PreludeTest, TestEnumerate) {
     }
     EXPECT_EQ(total, 5 + 10 + 15 + 20);
 }
+
+TEST(PreludeTest, TestChunkBy) {
+    std::vector<std::string> = {"hello", "world", "", "second", "group", "", "and", "   three"};
+}

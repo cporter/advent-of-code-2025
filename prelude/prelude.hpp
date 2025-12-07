@@ -382,7 +382,9 @@ struct chunk_by_fn {
     template <class P> auto operator()(P pred) const { return std::pair{chunk_by_fn{}, pred}; }
 };
 } // namespace detail
+
 inline constexpr detail::chunk_by_fn chunk_by;
+
 namespace detail {
 struct run_length_fn {
     template <std::ranges::viewable_range R> auto operator()(R &&r) const {
