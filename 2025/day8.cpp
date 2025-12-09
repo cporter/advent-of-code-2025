@@ -4,7 +4,7 @@
 namespace rv = std::ranges::views;
 
 struct vec3 {
-    int x, y, z;
+    long x, y, z;
 };
 
 std::ostream &operator<<(std::ostream &out, vec3 &v) {
@@ -74,9 +74,23 @@ struct DSU {
 
         return ret;
     }
+
+    bool fully_connected() {
+        for (size_t i = 1; i < parent.size(); ++i) {
+            if (find(i) != find(i - 1)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    size_t connections() const {
+        std::set<size_t> ps(parent.begin(), parent.end());
+        return ps.size();
+    }
 };
 
-auto calc_part1(const std::vector<vec3> &verts, const std::vector<edge> &es) {
+long calc_part1(const std::vector<vec3> &verts, const std::vector<edge> &es) {
     DSU dsu(verts.size());
     const size_t N = verts.size() < 100 ? 10 : 1000;
     for (auto &e : es | rv::take(N)) {
@@ -87,10 +101,22 @@ auto calc_part1(const std::vector<vec3> &verts, const std::vector<edge> &es) {
     return subsizes | rv::take(3) | prelude::product;
 }
 
+long calc_part2(const std::vector<vec3> &verts, const std::vector<edge> &es) {
+    DSU dsu(verts.size());
+    for (auto &e : es) {
+        dsu.unite(e.a, e.b);
+        if (dsu.fully_connected()) {
+            long ret = verts[e.a].x * verts[e.b].x;
+            return ret;
+        }
+    }
+    return -1;
+}
+
 int main(int, char **) {
     auto points = prelude::line_view(std::cin) | rv::transform([](const std::string &line) {
                       auto parts = line | rv::split(',') | rv::transform([](auto &&r) {
-                                       return std::stoi(std::string(r.begin(), r.end()));
+                                       return std::stol(std::string(r.begin(), r.end()));
                                    });
                       vec3 v;
                       auto ints = parts.begin();
@@ -114,8 +140,10 @@ int main(int, char **) {
               [](const edge &a, const edge &b) { return a.distance < b.distance; });
 
     auto part1 = calc_part1(points, edges);
+    auto part2 = calc_part2(points, edges);
 
     fmt::print("part 1 = {}\n", part1);
+    fmt::print("part 2 = {}\n", part2);
 
     return 0;
 }
