@@ -452,4 +452,6 @@ template <typename Collection> Collection transpose(Collection &orig) {
     return reformed;
 }
 
+template <typename R> auto pairwise(R &&r) { return zip(r, std::ranges::drop_view(r, 1)); }
+
 } // namespace prelude
