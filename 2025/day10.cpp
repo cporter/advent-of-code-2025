@@ -1,5 +1,7 @@
 #include "prelude/prelude.hpp"
 #include <set>
+#include <deque>
+
 namespace rv = std::ranges::views;
 struct Machine {
     short desiredState;
@@ -72,7 +74,7 @@ long calcMachine1(const Machine &machine) {
             if (current == machine.desiredState) {
                 return presses + 1;
             }
-            q.push_front(std::make_tuple(current, presses + 1));
+            q.push_front({current, presses + 1});
         }
     }
     return -1;
@@ -91,42 +93,42 @@ std::vector<long> press(const std::vector<long> &start, short button) {
     return current;
 }
 
-long calcMachine2(const Machine &machine) {
-    std::set<std::vector<long>> seen;
-    std::deque<std::pair<std::vector<long>, long>> q;
+// long calcMachine2(const Machine &machine) {
+//     std::set<std::vector<long>> seen;
+//     std::deque<std::pair<std::vector<long>, long>> q;
 
-    q.push_back(std::make_pair(std::vector<long>(machine.joltageRequirement.size()), 0));
+//     q.push_back(std::make_pair(std::vector<long>(machine.joltageRequirement.size()), 0));
 
-    while (0 < q.size()) {
-        auto [state, presses] = q.back();
-        // std::string s;
-        // for (size_t i = 0; i < state.size(); ++i) {
-        //     s += fmt::format("{}, ", state[i]);
-        // }
-        // spdlog::info("presses = {}, state = {}", presses, s);
-        q.pop_back();
-        if (seen.contains(state)) {
-            continue;
-        }
-        seen.insert(state);
-        for (auto button : machine.buttons) {
-            auto current = press(state, button);
-            if (current == machine.joltageRequirement) {
-                return presses + 1;
-            }
-            q.push_front(std::make_tuple(current, presses + 1));
-        }
-    }
-    return -1;
-}
+//     while (0 < q.size()) {
+//         auto [state, presses] = q.back();
+//         // std::string s;
+//         // for (size_t i = 0; i < state.size(); ++i) {
+//         //     s += fmt::format("{}, ", state[i]);
+//         // }
+//         // spdlog::info("presses = {}, state = {}", presses, s);
+//         q.pop_back();
+//         if (seen.contains(state)) {
+//             continue;
+//         }
+//         seen.insert(state);
+//         for (auto button : machine.buttons) {
+//             auto current = press(state, button);
+//             if (current == machine.joltageRequirement) {
+//                 return presses + 1;
+//             }
+//             q.push_front(std::make_tuple(current, presses + 1));
+//         }
+//     }
+//     return -1;
+// }
 
 long calc_part1(const std::vector<Machine> &machines) {
     return machines | rv::transform(calcMachine1) | prelude::sum;
 }
 
-long calc_part2(const std::vector<Machine> &machines) {
-    return machines | rv::transform(calcMachine2) | prelude::sum;
-}
+// long calc_part2(const std::vector<Machine> &machines) {
+//     return machines | rv::transform(calcMachine2) | prelude::sum;
+// }
 
 int main(int, char **) {
     auto machines
@@ -135,7 +137,7 @@ int main(int, char **) {
     long part1 = calc_part1(machines);
     fmt::print("part 1: {}\n", part1);
 
-    long part2 = calc_part2(machines);
-    fmt::print("part 2: {}\n", part2);
+    // long part2 = calc_part2(machines);
+    // fmt::print("part 2: {}\n", part2);
     return 0;
 }

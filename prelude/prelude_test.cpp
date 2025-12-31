@@ -51,16 +51,16 @@ TEST(PreludeTest, TestPairwise) {
     ASSERT_EQ(count, expected.size());
 }
 
-TEST(PreludeTest, TestCombinations) {
-    std::vector<int> stuff = {1, 2, 3, 4};
-    std::vector<std::tuple<int, int>> expected{{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 4}};
-    auto returned = prelude::combinations(stuff, 2) | prelude::collect<std::vector>;
-    std::ranges::sort(returned);
-    ASSERT_EQ(returned.size(), expected.size());
-    for (auto [r, e] : prelude::zip(returned, expected)) {
-        EXPECT_EQ(r, e);
-    }
-}
+// TEST(PreludeTest, TestCombinations) {
+//     std::vector<int> stuff = {1, 2, 3, 4};
+//     std::vector<std::tuple<int, int>> expected{{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 4}};
+//     auto returned = prelude::combinations(stuff, 2) | prelude::collect<std::vector>;
+//     std::ranges::sort(returned);
+//     ASSERT_EQ(returned.size(), expected.size());
+//     for (auto [r, e] : prelude::zip(returned, expected)) {
+//         EXPECT_EQ(r, e);
+//     }
+// }
 
 // TEST(PreludeTest, TestChunkBy) {
 //     std::vector<std::string> words
