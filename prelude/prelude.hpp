@@ -19,6 +19,8 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+using std::operator""sv;
+
 // Rangy utilities that make C++ feel more at home.
 // I think a lot of these things are in c++23? I should just get a new compiler.
 

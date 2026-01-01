@@ -25,10 +25,8 @@ Package fromString(const std::string &s) {
 int main(int, char **) {
     std::vector<Package> packages
         = prelude::line_view(std::cin) | rv::transform(fromString) | prelude::collect<std::vector>;
-    int part1 = packages | rv::transform([](const auto &p) { return p.wrappingRequired(); })
-                | prelude::sum;
-    int part2
-        = packages | rv::transform([](const auto &p) { return p.ribbonRequired(); }) | prelude::sum;
+    int part1 = packages | rv::transform(&Package::wrappingRequired) | prelude::sum;
+    int part2 = packages | rv::transform(&Package::ribbonRequired) | prelude::sum;
     fmt::print("part 1: {}\n", part1);
     fmt::print("part 2: {}\n", part2);
 }
