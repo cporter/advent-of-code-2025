@@ -9,6 +9,7 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -22,6 +23,13 @@
 // I think a lot of these things are in c++23? I should just get a new compiler.
 
 namespace prelude {
+
+template <typename R> auto front(R &&r) {
+    for (auto &x : r) {
+        return x;
+    }
+    throw std::logic_error("this does not work with empty ranges");
+}
 
 struct line_view : std::ranges::view_base {
     std::istream *is;
