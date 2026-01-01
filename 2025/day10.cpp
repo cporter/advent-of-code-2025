@@ -1,6 +1,6 @@
 #include "prelude/prelude.hpp"
-#include <set>
 #include <deque>
+#include <set>
 
 #include <z3++.h>
 
@@ -24,9 +24,7 @@ short bits(const std::vector<bool> &bs) {
 
 auto contained(const std::string &s) { return s.substr(1, s.size() - 2); }
 
-short stos(const std::string& s) {
-    return static_cast<short>(std::stoi(s));
-}
+short stos(const std::string &s) { return static_cast<short>(std::stoi(s)); }
 
 std::vector<short> commaNums(const std::string &s) {
     return rv::split(s, ',') | rv::transform([](const auto &&r) {
@@ -114,7 +112,6 @@ int calcMachine2(const Machine &machine) {
             B[i][j] += 1;
         }
     }
-
     z3::expr_vector buttons(c);
     for (int j = 0; j < M; ++j) {
         std::string name = fmt::format("b_{}", j);
