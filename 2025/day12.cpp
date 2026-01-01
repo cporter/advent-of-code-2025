@@ -3,7 +3,6 @@
 #include <array>
 #include <vector>
 
-namespace rv = std::ranges::views;
 using std::operator""sv;
 
 using shape = std::array<bool, 9>;

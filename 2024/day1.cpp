@@ -9,26 +9,6 @@
 
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
-// template <typename R> class drange {
-//   private:
-//     R _r;
-//     std::ranges::iterator_t<R> _begin, _end;
-
-//   public:
-//     using T = std::ranges::value_t<R>;
-//     drange(R&& r) : _r(std::forward<R>(r)), _begin(std::ranges(begin(_r)),
-//     _end(std::ranges::end(_r)) {}
-
-//     T& operator*() const {
-//         return *_begin; }
-//     bool done() const {
-//         return _begin == _end; }
-//     void advance() {
-//         ++_begin; }
-// };
-
 int main() {
     std::vector<int> left, right;
     prelude::line_view lines{std::cin};
@@ -45,7 +25,7 @@ int main() {
     std::sort(left.begin(), left.end());
     std::sort(right.begin(), right.end());
 
-    auto part1 = prelude::zip(left, right) | rv::transform([](const auto &tup) {
+    auto part1 = rv::zip(left, right) | rv::transform([](const auto &tup) {
                      auto &[a, b] = tup;
                      return std::abs(a - b);
                  })

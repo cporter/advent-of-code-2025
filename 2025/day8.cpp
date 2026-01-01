@@ -1,7 +1,6 @@
 #include <set>
 
 #include "prelude/prelude.hpp"
-namespace rv = std::ranges::views;
 
 struct vec3 {
     long x, y, z;

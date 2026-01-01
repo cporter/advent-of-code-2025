@@ -1,7 +1,5 @@
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 int part1(const std::string &line) {
     return line | rv::transform([](const char ch) {
                switch (ch) {

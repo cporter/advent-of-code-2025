@@ -19,7 +19,9 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
+// yep, we're polluting the global namespace. It's for-fun coding. Sue me.
 using std::operator""sv;
+namespace rv = std::ranges::views;
 
 // Rangy utilities that make C++ feel more at home.
 // I think a lot of these things are in c++23? I should just get a new compiler.
@@ -145,95 +147,10 @@ template <std::ranges::input_range R> auto collect_optional(R &&r) {
     return Result(std::move(result));
 }
 
-// zip
-namespace detail {
-template <std::ranges::viewable_range... Rs>
-class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
-  private:
-    std::tuple<std::ranges::views::all_t<Rs>...> bases;
-
-    // ---- iterator ----
-    struct iterator {
-        zip_view *parent;
-        std::tuple<std::ranges::iterator_t<Rs>...> iters;
-
-        using value_type = std::tuple<std::ranges::range_reference_t<Rs>...>;
-        using difference_type = std::ptrdiff_t;
-        using iterator_category = std::input_iterator_tag;
-
-        iterator() = default;
-
-        iterator(zip_view *p, auto &&its) : parent(p), iters(std::forward<decltype(its)>(its)) {}
-
-        value_type operator*() const {
-            return std::apply([](auto &...it) { return value_type(*it...); }, iters);
-        }
-
-        iterator &operator++() {
-            std::apply([](auto &...it) { ((++it), ...); }, iters);
-            return *this;
-        }
-
-        iterator operator++(int) {
-            iterator tmp = *this;
-            ++*this;
-            return tmp;
-        }
-    };
-
-    // ---- sentinel ----
-    struct sentinel {
-        std::tuple<std::ranges::sentinel_t<Rs>...> ends;
-
-        friend bool operator==(const iterator &it, const sentinel &s) {
-            bool stop = false;
-            std::apply(
-                [&](auto &...ends_tuple) {
-                    std::apply([&](auto &...its) { ((stop |= (its == ends_tuple)), ...); },
-                               it.iters);
-                },
-                s.ends);
-            return stop;
-        }
-
-        friend bool operator!=(const iterator &it, const sentinel &s) { return !(it == s); }
-    };
-
-  public:
-    zip_view() = default;
-
-    explicit zip_view(Rs... rs) : bases(std::views::all(std::move(rs))...) {}
-
-    auto begin() & {
-        return iterator(
-            this,
-            std::apply([](auto &...r) { return std::tuple(std::ranges::begin(r)...); }, bases));
-    }
-
-    auto end() & {
-        return sentinel{
-            std::apply([](auto &...r) { return std::tuple(std::ranges::end(r)...); }, bases)};
-    }
-
-    auto begin() && = delete;
-    auto end() && = delete;
-};
-
-template <typename... Rs> zip_view(Rs &&...) -> zip_view<std::views::all_t<Rs>...>;
-
-struct zip_fn {
-    template <std::ranges::viewable_range... Rs> auto operator()(Rs &&...rs) const {
-        return zip_view(std::forward<Rs>(rs)...);
-    }
-};
-} // namespace detail
-
-inline constexpr detail::zip_fn zip;
-
 namespace detail {
 struct enumerate_fn {
     template <std::ranges::viewable_range R> auto operator()(R &&r) const {
-        return zip(std::ranges::views::iota(int(0)), std::forward<R>(r));
+        return rv::zip(std::ranges::views::iota(int(0)), std::forward<R>(r));
     }
 
     template <std::ranges::viewable_range R>
@@ -462,6 +379,6 @@ template <typename Collection> Collection transpose(Collection &orig) {
     return reformed;
 }
 
-template <typename R> auto pairwise(R &&r) { return zip(r, std::ranges::drop_view(r, 1)); }
+template <typename R> auto pairwise(R &&r) { return rv::zip(r, std::ranges::drop_view(r, 1)); }
 
 } // namespace prelude

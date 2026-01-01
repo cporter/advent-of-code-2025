@@ -1,7 +1,5 @@
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 enum GridState { EMPTY = 0, ROLL = 1 };
 
 template <> struct fmt::formatter<GridState> : fmt::formatter<std::string_view> {

@@ -7,8 +7,6 @@
 
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 constexpr int LOCK_SIZE = 100;
 
 int lock_mod(int x) { return (x % LOCK_SIZE + LOCK_SIZE) % LOCK_SIZE; }

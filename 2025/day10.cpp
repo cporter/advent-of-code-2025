@@ -4,7 +4,6 @@
 
 #include <z3++.h>
 
-namespace rv = std::ranges::views;
 struct Machine {
     short desiredState;
     std::vector<short> buttons;

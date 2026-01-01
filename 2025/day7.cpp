@@ -1,7 +1,5 @@
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 long calc_part1(std::vector<std::string> &lines) {
     long count = 0;
     for (size_t i = 1; i < lines.size(); ++i) {

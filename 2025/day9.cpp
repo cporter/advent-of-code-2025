@@ -1,6 +1,5 @@
 
 #include "prelude/prelude.hpp"
-namespace rv = std::ranges::views;
 
 struct Point {
     double x, y;

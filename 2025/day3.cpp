@@ -1,7 +1,5 @@
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 long largest_subsequence(const std::vector<int> &v, int k) {
     int n = v.size();
     int to_remove = n - k;

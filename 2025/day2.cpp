@@ -7,7 +7,6 @@
 #include "prelude/prelude.hpp"
 
 using namespace std::literals;
-namespace rv = std::ranges::views;
 
 bool doubleseq(long n) {
     int digits = static_cast<int>(std::floor(std::log10(n))) + 1;

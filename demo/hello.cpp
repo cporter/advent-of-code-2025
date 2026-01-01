@@ -4,15 +4,13 @@
 
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 int main(int, char **) {
 
     std::vector<int> a = {1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5, 5};
     std::vector<int> b
         = a | rv::transform([](int x) { return x * x; }) | prelude::collect<std::vector>;
 
-    auto zipped = prelude::zip(a, b);
+    auto zipped = rv::zip(a, b);
 
     static_assert(std::ranges::range<decltype(zipped)>);
 

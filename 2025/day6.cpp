@@ -1,5 +1,4 @@
 #include "prelude/prelude.hpp"
-namespace rv = std::ranges::views;
 
 enum Operand { SUM, PRODUCT, NONE };
 
@@ -41,7 +40,7 @@ long part1(const std::vector<std::string> &raw_input) {
         }
     }
 
-    long part1 = prelude::zip(operands, nums) | rv::transform([](const auto &p) {
+    long part1 = rv::zip(operands, nums) | rv::transform([](const auto &p) {
                      auto &[op, num] = p;
                      return compute(op, num);
                  })

@@ -7,14 +7,12 @@
 
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
-
 TEST(PreludeTest, TestZip) {
     std::vector<int> v0 = {5, 4, 3, 2, 1, 0};
     std::vector<int> v1 = {0, 1, 2, 3, 4, 5};
     auto v2 = std::views::iota(0) | rv::transform([](auto) { return -1; });
 
-    auto good = prelude::zip(v0, v1, v2) | rv::transform([](const auto &tup) {
+    auto good = rv::zip(v0, v1, v2) | rv::transform([](const auto &tup) {
                     auto &[a, b, c] = tup;
                     return (a + b) * c;
                 })
@@ -40,13 +38,14 @@ TEST(PreludeTest, TestEnumerate) {
 
 TEST(PreludeTest, TestPairwise) {
     std::vector<int> stuff = {1, 2, 3, 4, 5};
-    std::vector<std::tuple<int, int>> expected{{1, 2}, {2, 3}, {3, 4}, {4, 5}};
+    std::vector<std::pair<int, int>> expected{{1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
     auto p = prelude::pairwise(stuff);
     int count = 0;
-    for (auto [r, e] : prelude::zip(p, expected)) {
+    for (auto [r, e] : rv::zip(p, expected)) {
         ++count;
-        EXPECT_EQ(r, e);
+        EXPECT_EQ(std::get<0>(r), std::get<0>(e));
+        EXPECT_EQ(std::get<1>(r), std::get<1>(e));
     }
     ASSERT_EQ(count, expected.size());
 }

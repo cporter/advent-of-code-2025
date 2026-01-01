@@ -1,8 +1,6 @@
 #include "prelude/prelude.hpp"
 #include <set>
 
-namespace rv = std::ranges::views;
-
 struct coord {
     int x, y;
     auto operator<=>(const coord &) const = default;

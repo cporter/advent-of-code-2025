@@ -1,6 +1,5 @@
 #include "prelude/prelude.hpp"
 
-namespace rv = std::ranges::views;
 using std::operator""sv;
 
 struct Package {

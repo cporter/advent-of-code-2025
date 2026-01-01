@@ -1,5 +1,4 @@
 #include "prelude/prelude.hpp"
-namespace rv = std::ranges::views;
 
 bool is_blank(const std::string &line) {
     return line.empty() || std::ranges::all_of(line, isspace);
