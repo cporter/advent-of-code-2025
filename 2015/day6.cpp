@@ -71,17 +71,21 @@ template <typename T> class Grid {
 
 int main(int, char **) {
     Grid<bool> g(N, N);
+    Grid<int> g2(N, N);
     for (auto line : prelude::line_view(std::cin)) {
         auto inst = parseInstruction(line);
         std::visit(
-            [&g](auto &&arg) {
+            [&](auto &&arg) {
                 using T = std::decay_t<decltype(arg)>;
                 for (int r = arg.tl.y; r <= arg.br.y; ++r) {
                     for (int c = arg.tl.x; c <= arg.br.x; ++c) {
+                        int current = g2.get(r, c);
                         if constexpr (std::is_same_v<T, Turn>) {
                             g.set(r, c, arg.on);
+                            g2.set(r, c, std::max(0, current + (arg.on ? 1 : -1)));
                         } else if constexpr (std::is_same_v<T, Toggle>) {
                             g.set(r, c, !g.get(r, c));
+                            g2.set(r, c, current + 2);
                         } else {
                             throw std::runtime_error("Whoa, not a type we expected");
                         }
@@ -93,6 +97,8 @@ int main(int, char **) {
 
     int part1 = std::ranges::distance(g.elts() | rv::filter([](bool b) { return b; }));
     fmt::print("part 1: {}\n", part1);
+    int part2 = g2.elts() | prelude::sum;
+    fmt::print("part 2: {}\n", part2);
 
     return 0;
 }
