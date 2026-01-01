@@ -25,12 +25,12 @@ TEST(PreludeTest, TestZip) {
 TEST(PreludeTest, TestEnumerate) {
     std::vector<int> all5 = {5, 5, 5, 5, 5};
     int total = 0;
-    for (auto [a, b] : prelude::enumerate(all5)) {
+    for (auto [a, b] : rv::enumerate(all5)) {
         total += a * b;
     }
 
     total = 0;
-    for (auto [a, b] : all5 | prelude::enumerate) {
+    for (auto [a, b] : all5 | rv::enumerate) {
         total += a * b;
     }
     EXPECT_EQ(total, 5 + 10 + 15 + 20);

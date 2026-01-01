@@ -32,11 +32,11 @@ template <typename T> class Grid {
     };
 
     auto elts() const noexcept {
-        return _elts | prelude::enumerate | rv::transform([](auto &&rowpair) {
+        return _elts | rv::enumerate | rv::transform([](auto &&rowpair) {
                    const auto [r, row] = rowpair;
-                   return row | prelude::enumerate | rv::transform([r](auto &&colpair) {
+                   return row | rv::enumerate | rv::transform([r](auto &&colpair) {
                               const auto [c, elt] = colpair;
-                              Point point{r, c, elt};
+                              Point point{static_cast<int>(r), static_cast<int>(c), elt};
                               return point;
                           });
                })

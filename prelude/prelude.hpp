@@ -147,19 +147,6 @@ template <std::ranges::input_range R> auto collect_optional(R &&r) {
     return Result(std::move(result));
 }
 
-namespace detail {
-struct enumerate_fn {
-    template <std::ranges::viewable_range R> auto operator()(R &&r) const {
-        return rv::zip(std::ranges::views::iota(int(0)), std::forward<R>(r));
-    }
-
-    template <std::ranges::viewable_range R>
-    friend auto operator|(R &&r, const enumerate_fn &self) {
-        return self(std::forward<R>(r));
-    }
-};
-} // namespace detail
-inline constexpr detail::enumerate_fn enumerate{};
 // pipey reduce
 namespace detail {
 struct reduce_fn {

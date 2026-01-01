@@ -55,7 +55,7 @@ long calc_part1(const std::vector<shape> &shapes, const std::vector<Problem> &pr
     return problems | rv::transform([shapes](const Problem &p) {
                int area = p.width * p.height;
                int needed = 0;
-               for (auto [idx, c] : prelude::enumerate(p.counts)) {
+               for (auto [idx, c] : rv::enumerate(p.counts)) {
                    // admission: I got this solution off the internet.
                    needed += 9 * c;
                }
