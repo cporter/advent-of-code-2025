@@ -212,99 +212,12 @@ struct for_each_fn {
 inline constexpr detail::for_each_fn for_each;
 
 namespace detail {
-template <std::ranges::view R, class Pred>
-    requires std::regular_invocable<Pred &, std::ranges::range_reference_t<R>,
-                                    std::ranges::range_reference_t<R>>
-class chunk_by_view : public std::ranges::view_base {
-    R base_;
-    Pred pred_;
-
-    using Iter = std::ranges::iterator_t<R>;
-
-  public:
-    chunk_by_view() = default;
-    chunk_by_view(R base, Pred pred) : base_(std::move(base)), pred_(std::move(pred)) {}
-
-    class iterator {
-        Iter cur_;
-        Iter end_;
-        Pred *pred_;
-
-      public:
-        using value_type = std::ranges::subrange<Iter>;
-        using difference_type = std::ptrdiff_t;
-
-        iterator() = default;
-        iterator(Iter cur, Iter end, Pred *pred) : cur_(cur), end_(end), pred_(pred) {}
-
-        value_type operator*() const {
-            Iter first = cur_;
-            Iter it = cur_;
-            if (it != end_) {
-                Iter next = it;
-                ++next;
-                while (next != end_ && std::invoke(*pred_, *it, *next)) {
-                    ++it;
-                    ++next;
-                }
-                ++it;
-            }
-            return {first, it};
-        }
-
-        iterator &operator++() {
-            if (cur_ == end_)
-                return *this;
-            Iter it = cur_;
-            Iter next = it;
-            ++next;
-            // scan this chunk
-            while (next != end_ && std::invoke(*pred_, *it, *next)) {
-                ++it;
-                ++next;
-            }
-            // step to next chunk
-            cur_ = ++it;
-            return *this;
-        }
-
-        void operator++(int) { ++(*this); }
-
-        bool operator==(const iterator &other) const { return cur_ == other.cur_; }
-    };
-
-    iterator begin() {
-        return iterator{std::ranges::begin(base_), std::ranges::end(base_), &pred_};
-    }
-
-    iterator end() { return iterator{std::ranges::end(base_), std::ranges::end(base_), &pred_}; }
-};
-
-template <class R, class P>
-chunk_by_view(R &&, P) -> chunk_by_view<std::ranges::views::all_t<R>, P>;
-
-struct chunk_by_fn {
-    template <std::ranges::viewable_range R, class P> auto operator()(R &&r, P pred) const {
-        return chunk_by_view(std::forward<R>(r), std::move(pred));
-    }
-
-    template <std::ranges::viewable_range R, class P>
-    friend auto operator|(R &&r, const std::pair<chunk_by_fn, P> &self) {
-        return chunk_by_view(std::forward<R>(r), self.second);
-    }
-
-    template <class P> auto operator()(P pred) const { return std::pair{chunk_by_fn{}, pred}; }
-};
-} // namespace detail
-
-inline constexpr detail::chunk_by_fn chunk_by;
-
-namespace detail {
 struct run_length_fn {
     template <std::ranges::viewable_range R> auto operator()(R &&r) const {
-        return std::forward<R>(r) | chunk_by(std::equal_to{}) // group equal consecutive elements
-               | std::views::transform([](auto group) {       // convert group → (value,count)
-                     return std::pair{*group.begin(),         // the value
+        return std::forward<R>(r)
+               | rv::chunk_by(std::equal_to{})          // group equal consecutive elements
+               | std::views::transform([](auto group) { // convert group → (value,count)
+                     return std::pair{*group.begin(),   // the value
                                       static_cast<std::size_t>(std::ranges::distance(group))};
                  });
     }
